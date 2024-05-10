@@ -1,0 +1,10 @@
+﻿@page "/hypoteka"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using RezervationSystem.Data
+@using RezervationSystem.Enums
+@using RezervationSystem.Services
+@attribute [Authorize]
+@rendermode InteractiveServer
+<PageTitle>Hypoteka</PageTitle>
+<MeetingReservationComponent Position="EmployeePosition.HU"></MeetingReservationComponent>

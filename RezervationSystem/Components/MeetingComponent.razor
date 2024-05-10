@@ -1,0 +1,102 @@
+﻿@using RezervationSystem.Services
+@using RezervationSystem.Data
+@using Microsoft.AspNetCore.Identity
+@using RezervationSystem.Enums
+
+<div style="display: flex; border: 2px solid black; border-radius: 10px; padding: 5px; margin: 5px">
+    <div style="height: 100%; width: 200px; border-right: black solid 3px; display: flex; justify-content: center; align-items: center">
+        @Meeting.MeetingDate
+    </div>
+    <div style="height: 100%; width: 200px; border-right: black solid 3px; display: flex; justify-content: center; align-items: center">
+        @if (Meeting.Position == EmployeePosition.I)
+        {
+            <span>Investice</span>
+        }
+        @if (Meeting.Position == EmployeePosition.SU)
+        {
+            <span>Spotrebitelsky uver</span>
+        }
+        @if (Meeting.Position == EmployeePosition.HU)
+        {
+            <span>Hypoteka</span>
+        }
+    </div>
+    <div style="height: 100%; width: 200px; border-right: black solid 3px; display: flex; justify-content: center; align-items: center">
+        @Meeting.Branch.Name
+    </div>
+    <div style="height: 100%; width: 200px; border-right: black solid 3px; display: flex; justify-content: center; align-items: center">
+        @Meeting.Branch.Address
+    </div>
+
+    @if (IsUserEmployee().Result)
+    {
+        @if (Meeting.EmployeeId != null && UserManager.GetUserId(Context.HttpContext.User) == Meeting.EmployeeId)
+        {
+            <button class="btn btn-danger" @onclick="OnDisagreeMeet">Disagree</button>
+        }
+        else
+        {
+            <button class="btn btn-info" @onclick="OnAgreeMeet">Agree</button>
+        }
+    }
+    else
+    {
+        @if (Meeting.ClientId != null && UserManager.GetUserId(Context.HttpContext.User) == Meeting.ClientId)
+        {
+            <div style="height: 100%; width: 200px; border-right: black solid 3px; display: flex; justify-content: center; align-items: center">
+                @if (Meeting.EmployeeId == null)
+                {
+                    <span>Waiting for confirmation...</span>
+                }
+                else
+                {
+                    <span>Confirmed.</span>
+                }
+            </div>
+            <button class="btn btn-danger" @onclick="OnUneservedMeet">Unreserve</button>
+        }
+        else
+        {
+            <button class="btn btn-info" @onclick="OnReservedMeet">Reserve</button>
+        }
+    }
+
+</div>
+
+@code {
+    [Inject] public IHttpContextAccessor Context { get; set; }
+    [Inject] public UserManager<ApplicationUser> UserManager { get; set; }
+    [Parameter] public EventCallback<Meeting> OnMeetingReserved { get; set; }
+    [Parameter] public EventCallback<Meeting> OnMeetingUnreserved { get; set; }
+    [Parameter] public EventCallback<Meeting> OnMeetingDisagree { get; set; }
+    [Parameter] public EventCallback<Meeting> OnMeetingAgree { get; set; }
+    [Parameter] public Meeting Meeting { get; set; }
+
+    private async Task<bool> IsUserEmployee()
+    {
+        var user = await UserManager.GetUserAsync(Context.HttpContext.User);
+
+        return user.Role == SystemRoles.Employee;
+    }
+
+    public void OnReservedMeet()
+    {
+        OnMeetingReserved.InvokeAsync(Meeting);
+    }
+
+    public void OnUneservedMeet()
+    {
+        OnMeetingUnreserved.InvokeAsync(Meeting);
+    }
+
+    private void OnDisagreeMeet()
+    {
+        OnMeetingDisagree.InvokeAsync(Meeting);
+    }
+
+    private void OnAgreeMeet()
+    {
+        OnMeetingAgree.InvokeAsync(Meeting);
+    }
+
+}

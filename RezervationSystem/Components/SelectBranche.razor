@@ -1,0 +1,23 @@
+﻿@using RezervationSystem.Services
+<h3>Vyberte pobocku:</h3>
+<select @bind="_selectedValue" class="form-control col-6">
+    @foreach (var branch in DbService.GetBranches())
+    {
+        <option value=@branch.Id.ToString()>@branch.Name</option>
+    }
+</select>
+<button type="submit" class="btn btn-info" @onclick="() => {OnSelectBranch();}">Select</button>
+
+@code {
+    [Parameter] public EventCallback<Guid> OnItemSelected { get; set; }
+
+    private bool _selected = false;
+    private string _selectedValue = "";
+    [Inject] public DbService DbService { get; set; }
+
+    public void OnSelectBranch()
+    {
+        OnItemSelected.InvokeAsync(new Guid(_selectedValue));
+    }
+
+}

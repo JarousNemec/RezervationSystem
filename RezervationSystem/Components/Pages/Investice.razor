@@ -1,0 +1,10 @@
+﻿@page "/investice"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using RezervationSystem.Data
+@using RezervationSystem.Enums
+@using RezervationSystem.Services
+@rendermode InteractiveServer
+@attribute [Authorize]
+<PageTitle>Investice</PageTitle>
+<MeetingReservationComponent Position="EmployeePosition.I"></MeetingReservationComponent>

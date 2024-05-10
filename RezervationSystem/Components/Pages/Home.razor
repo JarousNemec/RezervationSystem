@@ -1,0 +1,76 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using RezervationSystem.Data
+@using RezervationSystem.Enums
+@using RezervationSystem.Services
+@rendermode InteractiveServer
+@attribute [Authorize]
+<PageTitle>Overview</PageTitle>
+@if (IsUserEmployee().Result)
+{
+    
+    @foreach (var meet in MeetingService.GetReservedMeetingsByPositionAndPlace(UserEmpolyeePosition().Result,UserBranch().Result ))
+    {
+        <MeetingComponent Meeting="meet" OnMeetingAgree="AgreeCallback" OnMeetingDisagree="DisagreeCallback"></MeetingComponent>
+    }
+    @foreach (var meet in MeetingService.GetEmployeeMeetings(UserManager.GetUserId(Context.HttpContext.User)))
+    {
+        <MeetingComponent Meeting="meet" OnMeetingAgree="AgreeCallback" OnMeetingDisagree="DisagreeCallback"></MeetingComponent>
+    }
+    @* <EmployeeMeetingManagerComponent></EmployeeMeetingManagerComponent> *@
+}
+else
+{
+    @foreach (var meet in MeetingService.GetClientMeetings(UserManager.GetUserId(Context.HttpContext.User)))
+    {
+        <MeetingComponent Meeting="meet" OnMeetingUnreserved="UnReserveCallback" ></MeetingComponent>
+    }
+}
+
+
+@code
+{
+    [Inject] public MeetingService MeetingService { get; set; }
+
+    [Inject] public IHttpContextAccessor Context { get; set; }
+    [Inject] public UserManager<ApplicationUser> UserManager { get; set; }
+
+    private async Task<bool> IsUserEmployee()
+    {
+        var user = await UserManager.GetUserAsync(Context.HttpContext.User);
+
+        return user.Role == SystemRoles.Employee;
+    }
+    private async Task<EmployeePosition> UserEmpolyeePosition()
+    {
+        var user = await UserManager.GetUserAsync(Context.HttpContext.User);
+
+        return (EmployeePosition)user.Position;
+    }
+    private async Task<Guid> UserBranch()
+    {
+        var user = await UserManager.GetUserAsync(Context.HttpContext.User);
+
+        return (Guid)user.BranchId;
+    }
+    
+    
+    private void UnReserveCallback(Meeting meeting)
+    {
+        MeetingService.UnreserveMeeting(meeting.Id, UserManager.GetUserId(Context.HttpContext.User));
+        StateHasChanged();
+    }
+
+    private void DisagreeCallback(Meeting meeting)
+    {
+        MeetingService.DisagreeMeeting(meeting.Id, UserManager.GetUserId(Context.HttpContext.User));
+        StateHasChanged();
+    }
+
+    private void AgreeCallback(Meeting meeting)
+    {
+        MeetingService.AgreeMeeting(meeting.Id, UserManager.GetUserId(Context.HttpContext.User));
+        StateHasChanged();
+    }
+}

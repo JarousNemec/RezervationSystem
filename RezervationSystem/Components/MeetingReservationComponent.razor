@@ -1,0 +1,40 @@
+﻿@using RezervationSystem.Enums
+@using RezervationSystem.Services
+@using Microsoft.AspNetCore.Identity
+@using RezervationSystem.Data
+<SelectBranche OnItemSelected="Callback"></SelectBranche>
+<h2>Volné termíny na zvolené pobočce</h2>
+@if (_branchSelected)
+{
+    @foreach (var meet in MeetingService.GetFreeMeetingsByPositionAndPlace(Position, _branchId))
+    {
+        <MeetingComponent Meeting="meet" OnMeetingReserved="ReserveCallback"></MeetingComponent>
+    }
+}
+
+@code {
+    [Parameter] public EmployeePosition Position { get; set; }
+    [Inject] public MeetingService MeetingService { get; set; }
+
+    [Inject] public IHttpContextAccessor Context { get; set; }
+    [Inject] public UserManager<ApplicationUser> UserManager { get; set; }
+    private bool _branchSelected = false;
+    private Guid _branchId;
+
+    
+    
+    private void Callback(Guid branchId)
+    {
+        _branchSelected = true;
+        _branchId = branchId;
+        StateHasChanged();
+    }
+
+    private void ReserveCallback(Meeting meeting)
+    {
+        MeetingService.ReserveMeeting(meeting.Id, UserManager.GetUserId(Context.HttpContext.User));
+        StateHasChanged();
+    }
+
+    
+}

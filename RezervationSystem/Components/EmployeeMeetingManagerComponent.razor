@@ -1,0 +1,43 @@
+﻿@using RezervationSystem.Services
+@using Microsoft.AspNetCore.Identity
+@using RezervationSystem.Data
+@using RezervationSystem.Enums
+<h3>Add new meeting dates:</h3>
+<div>
+    @foreach (var date in dates)
+    {
+        <span>@date.Day | @date.Month | @date.Year - @date.Hour : @date.Minute</span>
+    }
+</div>
+<DateInput TValue="DateTime"  @bind-Value="@date" EnableMinMax="true" Min="@minDate" Placeholder="Enter Date"/>
+<TimeInput TValue="TimeOnly" Value="time" ValueExpression="() => time" ValueChanged="(value) => TimeChanged(value)" />
+<button class="btn btn-info" @onclick="()=>{dates.Add(new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second)); date = new DateTime();}">Add</button>
+<button class="btn btn-danger" @onclick="SaveNewMeetings">Save new meetings</button>
+@code {
+    [Inject] public MeetingService MeetingService { get; set; }
+    [Inject] public IHttpContextAccessor Context { get; set; }
+    [Inject] public UserManager<ApplicationUser> UserManager { get; set; }
+    List<DateTime> dates = new List<DateTime>();
+    private DateTime date = new DateTime(2024,5,5);
+    private DateTime date1 = new DateTime();
+    private TimeOnly time = new TimeOnly(8, 0);
+    private TimeOnly time1 = new TimeOnly();
+    DateTime minDate = DateTime.Now;
+
+    private async void SaveNewMeetings()
+    {
+        var user = (ApplicationUser)(await UserManager.GetUserAsync(Context.HttpContext.User));
+        var meetings = new List<Meeting>();
+        foreach (var date in dates)
+        {
+            meetings.Add(new Meeting()
+            {
+                BranchId = (Guid)user.BranchId,
+                Id = Guid.NewGuid(),
+                MeetingDate = date,
+                Position = (EmployeePosition)user.Position
+            });
+        }
+        MeetingService.AddMeetings(meetings);
+    }
+}
